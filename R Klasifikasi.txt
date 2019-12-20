@@ -1,0 +1,58 @@
+data=read.csv("https://raw.githubusercontent.com/soniadi/Classification/master/iris.csv")
+head(data)
+str(data)
+library("party")
+library(caTools)
+library(ggplot2)
+library(GGally)
+library(e1071)
+ggpairs(data,aes(colour=species),1:4)
+set.seed(12)
+
+library(nnet)
+
+
+
+
+
+split <- sample.split(data$species, SplitRatio = 0.2)
+test = subset(data, split == TRUE)
+train = subset(data, split == FALSE)
+reglog=multinom(species~.,data=train)
+summary(reglog)
+z=summary(reglog)$coefficients/summary(reglog)$standard.errors
+p=(1-pnorm(abs(z),0,1))*2
+p
+
+dim(train)
+dim(test)
+
+nb<-naiveBayes(species~.,data=train)
+m <- ctree(species ~ ., data = train)
+cm=as.matrix(table(predict(m, test[,1:4]), test$species))
+cmnb=as.matrix(table(predict(nb, test[,1:4]), test$species))
+table(predict(m, train[,1:4]), train$species)
+table(predict(nb, train[,1:4]), train$species)
+plot(m,type='simple')
+
+
+#Classification Report
+n = sum(cm) # number of instances
+nc = nrow(cm) # number of classes
+diag = diag(cm) # number of correctly classified instances per class 
+rowsums = apply(cm, 1, sum) # number of instances per class
+colsums = apply(cm, 2, sum) # number of predictions per class
+p = rowsums / n # distribution of instances over the actual classes
+q = colsums / n # distribution of instances over the predicted classes
+accuracy = sum(diag) / n 
+Precision = diag / colsums 
+Recall = diag / rowsums 
+F1 = 2 * Precision * Recall / (Precision + Recall) 
+cr=data.frame(Precision, Recall, F1)
+Precision = mean(Precision)
+Recall = mean(Recall)
+F1 = mean(F1)
+a=data.frame(Precision, Recall, F1)
+cr=rbind(cr,a)
+row.names(cr)=c('Setosa','Versicolor','Virginica','Macro')
+cr
